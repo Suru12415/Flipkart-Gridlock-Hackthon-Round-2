@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TrafficShield AI | Gridlock Hackathon 2.0</title>
+<style>
+:root {
+  --bg:       #0a0e1a;
+  --card:     #111827;
+  --card2:    #1a2235;
+  --accent:   #00d4ff;
+  --accent2:  #7c3aed;
+  --green:    #10b981;
+  --red:      #ef4444;
+  --orange:   #f59e0b;
+  --yellow:   #eab308;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --border:   #1e293b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 40px;
+    background:rgba(17,24,39,0.95);border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.3rem;font-weight:700;}
+.logo span{color:var(--accent);}
+.logo .dot{width:10px;height:10px;background:var(--accent);border-radius:50%;
+           box-shadow:0 0 12px var(--accent);animation:pulse 2s infinite;}
+.nav-links{display:flex;gap:24px;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.9rem;
+             transition:.2s;padding:6px 14px;border-radius:8px;}
+.nav-links a:hover,.nav-links a.active{color:var(--accent);background:rgba(0,212,255,.08);}
+.badge{background:linear-gradient(135deg,var(--accent2),var(--accent));
+       color:#fff;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;}
+
+/* HERO */
+.hero{text-align:center;padding:70px 20px 40px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(0,212,255,.12),transparent);
+  pointer-events:none;}
+.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;line-height:1.2;
+         background:linear-gradient(135deg,#fff 30%,var(--accent));
+         -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{color:var(--muted);max-width:560px;margin:16px auto 0;line-height:1.7;font-size:1.05rem;}
+.flipkart-tag{display:inline-flex;align-items:center;gap:8px;
+              background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);
+              color:#fb923c;padding:6px 16px;border-radius:20px;
+              font-size:.8rem;font-weight:600;margin-bottom:20px;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+           max-width:900px;margin:40px auto;padding:0 20px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+           padding:20px;text-align:center;transition:.3s;}
+.stat-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.stat-num{font-size:2rem;font-weight:800;color:var(--accent);}
+.stat-lbl{color:var(--muted);font-size:.8rem;margin-top:4px;}
+
+/* MAIN GRID */
+.main{display:grid;grid-template-columns:1fr 1fr;gap:24px;
+      max-width:1200px;margin:0 auto;padding:0 24px 60px;}
+
+/* UPLOAD PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;}
+.panel h2{font-size:1.1rem;font-weight:700;margin-bottom:20px;
+          display:flex;align-items:center;gap:8px;}
+.panel h2 .icon{width:32px;height:32px;background:rgba(0,212,255,.15);
+                border-radius:8px;display:flex;align-items:center;justify-content:center;
+                font-size:1rem;}
+
+.upload-zone{border:2px dashed var(--border);border-radius:14px;
+             padding:50px 20px;text-align:center;cursor:pointer;
+             transition:.3s;position:relative;overflow:hidden;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);
+  background:rgba(0,212,255,.05);}
+.upload-zone .up-icon{font-size:3rem;margin-bottom:12px;display:block;}
+.upload-zone p{color:var(--muted);font-size:.9rem;}
+.upload-zone strong{color:var(--accent);}
+#fileInput{display:none;}
+
+#preview-wrap{display:none;margin-top:16px;border-radius:12px;overflow:hidden;
+              position:relative;background:#000;}
+#preview-wrap img{width:100%;max-height:320px;object-fit:contain;display:block;}
+.preview-overlay{position:absolute;bottom:0;left:0;right:0;
+                 background:linear-gradient(transparent,rgba(0,0,0,.8));
+                 padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+.preview-overlay span{font-size:.8rem;color:#ccc;}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;
+     border:none;border-radius:10px;cursor:pointer;font-size:.95rem;
+     font-weight:600;transition:.2s;width:100%;justify-content:center;margin-top:16px;}
+.btn-primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+
+/* LOADING */
+.loading{display:none;text-align:center;padding:40px;}
+.spinner{width:48px;height:48px;border:3px solid var(--border);
+         border-top-color:var(--accent);border-radius:50%;
+         animation:spin 1s linear infinite;margin:0 auto 16px;}
+.loading-steps{display:flex;flex-direction:column;gap:8px;margin-top:16px;text-align:left;}
+.step{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.85rem;
+      padding:8px 14px;background:var(--card2);border-radius:8px;transition:.4s;}
+.step.active{color:var(--accent);border-left:2px solid var(--accent);}
+.step.done{color:var(--green);}
+
+/* RESULTS PANEL */
+#results-section{display:none;}
+.result-img-wrap{border-radius:12px;overflow:hidden;background:#000;margin-bottom:20px;position:relative;}
+.result-img-wrap img{width:100%;max-height:340px;object-fit:contain;display:block;}
+.result-badge{position:absolute;top:12px;right:12px;
+              padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;}
+.badge-safe{background:rgba(16,185,129,.2);color:var(--green);border:1px solid var(--green);}
+.badge-risk{background:rgba(239,68,68,.2);color:var(--red);border:1px solid var(--red);}
+.badge-warn{background:rgba(245,158,11,.2);color:var(--orange);border:1px solid var(--orange);}
+
+/* VIOLATION CARDS */
+.viol-list{display:flex;flex-direction:column;gap:10px;}
+.viol-card{background:var(--card2);border-radius:12px;padding:14px 16px;
+           border-left:3px solid;display:flex;gap:14px;align-items:flex-start;}
+.viol-card.critical{border-color:#dc2626;}
+.viol-card.high{border-color:#f97316;}
+.viol-card.medium{border-color:#eab308;}
+.viol-card.low{border-color:#22c55e;}
+.viol-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px;}
+.viol-info{flex:1;}
+.viol-name{font-weight:700;font-size:.95rem;}
+.viol-detail{color:var(--muted);font-size:.8rem;margin-top:2px;}
+.viol-conf{margin-top:6px;}
+.conf-bar{height:4px;background:var(--border);border-radius:2px;margin-top:4px;}
+.conf-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));}
+.conf-lbl{font-size:.75rem;color:var(--muted);}
+.sev-badge{font-size:.7rem;padding:2px 8px;border-radius:10px;font-weight:600;float:right;}
+.sev-critical{background:rgba(220,38,38,.2);color:#dc2626;}
+.sev-high{background:rgba(249,115,22,.2);color:#f97316;}
+.sev-medium{background:rgba(234,179,8,.2);color:#eab308;}
+.sev-low{background:rgba(34,197,94,.2);color:#22c55e;}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.sum-card{background:var(--card2);border-radius:12px;padding:16px;text-align:center;}
+.sum-num{font-size:1.8rem;font-weight:800;}
+.sum-lbl{color:var(--muted);font-size:.75rem;margin-top:2px;}
+
+/* PLATES */
+.plates-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.plate{background:#1c2a1e;border:1px solid #2d5a30;border-radius:8px;
+       padding:8px 16px;font-family:monospace;font-size:.95rem;
+       font-weight:700;color:#4ade80;letter-spacing:2px;
+       display:flex;align-items:center;gap:8px;}
+.plate .plate-conf{font-size:.7rem;color:var(--muted);letter-spacing:0;font-weight:400;}
+
+/* RISK METER */
+.risk-wrap{background:var(--card2);border-radius:12px;padding:16px;margin-bottom:16px;}
+.risk-label{font-size:.85rem;color:var(--muted);margin-bottom:8px;}
+.risk-bar{height:10px;background:var(--border);border-radius:5px;overflow:hidden;}
+.risk-fill{height:100%;border-radius:5px;transition:width 1s ease;
+           background:linear-gradient(90deg,var(--green),var(--orange),var(--red));}
+.risk-num{font-size:1.4rem;font-weight:800;margin-top:6px;}
+
+/* RIGHT PANEL — VIOLATION CATEGORIES */
+.cats-panel{background:var(--card);border:1px solid var(--border);
+            border-radius:18px;padding:28px;}
+.cat-item{display:flex;align-items:center;gap:14px;padding:12px 0;
+          border-bottom:1px solid var(--border);}
+.cat-item:last-child{border:none;}
+.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cat-name{flex:1;font-size:.9rem;}
+.cat-info{font-size:.8rem;color:var(--muted);}
+.cat-count{font-size:1.1rem;font-weight:700;color:var(--accent);}
+
+/* HOW IT WORKS */
+.how-section{max-width:1200px;margin:0 auto 60px;padding:0 24px;}
+.how-section h2{font-size:1.5rem;font-weight:700;margin-bottom:24px;
+                display:flex;align-items:center;gap:10px;}
+.steps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
+.step-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+           padding:20px;text-align:center;position:relative;}
+.step-card::after{content:'→';position:absolute;right:-14px;top:50%;transform:translateY(-50%);
+                  color:var(--muted);font-size:1.2rem;}
+.step-card:last-child::after{display:none;}
+.step-num{width:36px;height:36px;background:linear-gradient(135deg,var(--accent2),var(--accent));
+          border-radius:50%;display:flex;align-items:center;justify-content:center;
+          font-weight:700;margin:0 auto 12px;}
+.step-icon{font-size:1.8rem;margin-bottom:8px;}
+.step-card h3{font-size:.85rem;font-weight:600;margin-bottom:6px;}
+.step-card p{font-size:.75rem;color:var(--muted);line-height:1.5;}
+
+/* ALERT TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);
+       border:1px solid var(--accent);border-radius:12px;
+       padding:14px 20px;display:flex;align-items:center;gap:10px;
+       transform:translateX(200%);transition:.4s;z-index:999;max-width:320px;}
+.toast.show{transform:translateX(0);}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* NO VIOLATIONS */
+.no-viol{text-align:center;padding:40px;color:var(--muted);}
+.no-viol .nv-icon{font-size:3rem;color:var(--green);display:block;margin-bottom:10px;}
+
+/* FOOTER */
+footer{text-align:center;padding:24px;color:var(--muted);font-size:.8rem;
+       border-top:1px solid var(--border);}
+
+@media(max-width:768px){
+  .main,.steps-grid,.stats-row{grid-template-columns:1fr;}
+  nav{padding:12px 20px;}
+  .nav-links{display:none;}
+  .summary-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="dot"></div>
+    <span>Traffic</span>Shield AI
+  </div>
+  <div class="nav-links">
+    <a href="/" class="active">Detect</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="#how">How It Works</a>
+  </div>
+  <span class="badge">🏆 Gridlock 2.0 — Flipkart</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="flipkart-tag">⚡ Flipkart × HackerEarth · Prototype Round 2</div>
+  <h1>AI-Powered Traffic<br/>Violation Detection</h1>
+  <p>Upload any traffic image. Our system instantly detects violations, identifies vehicles, reads license plates, and generates enforcement evidence.</p>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num">8</div>
+    <div class="stat-lbl">Violation Types Detected</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">YOLOv8</div>
+    <div class="stat-lbl">Detection Engine</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">~0.3s</div>
+    <div class="stat-lbl">Inference Time</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">OCR</div>
+    <div class="stat-lbl">License Plate Reading</div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main">
+
+  <!-- LEFT: UPLOAD -->
+  <div>
+    <div class="panel" id="upload-panel">
+      <h2><span class="icon">📸</span> Upload Traffic Image</h2>
+
+      <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="up-icon">🚦</span>
+        <p><strong>Click to upload</strong> or drag & drop</p>
+        <p style="margin-top:8px;font-size:.8rem;">JPG, PNG, WEBP · Max 16MB</p>
+        <input type="file" id="fileInput" accept="image/*"/>
+      </div>
+
+      <div id="preview-wrap">
+        <img id="previewImg" src="" alt="Preview"/>
+        <div class="preview-overlay">
+          <span id="fileName">—</span>
+          <span id="fileSize">—</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="detectBtn" disabled onclick="runDetection()">
+        🔍 Analyze for Violations
+      </button>
+      <button class="btn btn-ghost" id="clearBtn" style="display:none" onclick="clearAll()">
+        ✕ Clear &amp; Upload New
+      </button>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading" id="loadingBox">
+      <div class="spinner"></div>
+      <p style="color:var(--muted)">Analyzing image with AI...</p>
+      <div class="loading-steps">
+        <div class="step" id="s1">🔍 Preprocessing image</div>
+        <div class="step" id="s2">🤖 Running YOLOv8 detection</div>
+        <div class="step" id="s3">⚖️ Classifying violations</div>
+        <div class="step" id="s4">🚗 Reading license plates (OCR)</div>
+        <div class="step" id="s5">📋 Generating evidence report</div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results-section" class="panel">
+      <h2><span class="icon">📋</span> Detection Results</h2>
+
+      <!-- Risk meter -->
+      <div class="risk-wrap">
+        <div class="risk-label">Risk Score</div>
+        <div class="risk-bar"><div class="risk-fill" id="riskFill" style="width:0%"></div></div>
+        <div class="risk-num" id="riskNum">0 / 100</div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-grid">
+        <div class="sum-card">
+          <div class="sum-num" id="sumVehicles" style="color:var(--accent)">0</div>
+          <div class="sum-lbl">Vehicles</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-num" id="sumPersons" style="color:var(--accent2)">0</div>
+          <div class="sum-lbl">Persons</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-num" id="sumViols" style="color:var(--red)">0</div>
+          <div class="sum-lbl">Violations</div>
+        </div>
+      </div>
+
+      <!-- Annotated image -->
+      <div class="result-img-wrap" id="resultImgWrap" style="display:none">
+        <img id="resultImg" src="" alt="Annotated"/>
+        <span class="result-badge" id="resultBadge">—</span>
+      </div>
+
+      <!-- Violations -->
+      <div id="violList" class="viol-list"></div>
+
+      <!-- Plates -->
+      <div id="platesSection" style="display:none;margin-top:16px;">
+        <div style="font-size:.85rem;color:var(--muted);margin-bottom:8px;">🚗 License Plates Detected</div>
+        <div class="plates-row" id="platesList"></div>
+      </div>
+
+      <!-- Timestamp -->
+      <div style="margin-top:16px;font-size:.75rem;color:var(--muted);text-align:right;"
+           id="resultTimestamp"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: VIOLATION CATEGORIES -->
+  <div>
+    <div class="cats-panel">
+      <h2><span class="icon">⚠️</span> Violation Categories</h2>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#ef4444"></div>
+        <div>
+          <div class="cat-name">🪖 Helmet Non-Compliance</div>
+          <div class="cat-info">Detects riders without helmets on motorcycles</div>
+        </div>
+        <span class="sev-badge sev-high">HIGH</span>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#f97316"></div>
+        <div>
+          <div class="cat-name">🏍️ Triple Riding</div>
+          <div class="cat-info">3+ persons on a two-wheeler</div>
+        </div>
+        <span class="sev-badge sev-high">HIGH</span>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#eab308"></div>
+        <div>
+          <div class="cat-name">🔒 Seatbelt Non-Compliance</div>
+          <div class="cat-info">Car occupants without seatbelts</div>
+        </div>
+        <span class="sev-badge sev-medium">MED</span>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#dc2626"></div>
+        <div>
+          <div class="cat-name">🚦 Red Light Violation</div>
+          <div class="cat-info">Vehicles crossing active red signals</div>
+        </div>
+        <span class="sev-badge sev-critical">CRITICAL</span>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#a855f7"></div>
+        <div>
+          <div class="cat-name">↔️ Wrong-Side Driving</div>
+          <div class="cat-info">Vehicles on incorrect side of road</div>
+        </div>
+        <span class="sev-badge sev-high">HIGH</span>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#06b6d4"></div>
+        <div>
+          <div class="cat-name">📦 Vehicle Overloading</div>
+          <div class="cat-info">Trucks/vehicles exceeding capacity</div>
+        </div>
+        <span class="sev-badge sev-medium">MED</span>
+      </div>
+      <div class="cat-item">
+        <div class="cat-dot" style="background:#22c55e"></div>
+        <div>
+          <div class="cat-name">🅿️ Illegal Parking</div>
+          <div class="cat-info">Vehicles parked in no-parking zones</div>
+        </div>
+        <span class="sev-badge sev-low">LOW</span>
+      </div>
+
+      <!-- Tech stack -->
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px;font-weight:600;">
+          🛠️ TECH STACK
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span style="background:var(--card2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:.75rem;">YOLOv8</span>
+          <span style="background:var(--card2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:.75rem;">OpenCV</span>
+          <span style="background:var(--card2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:.75rem;">EasyOCR</span>
+          <span style="background:var(--card2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:.75rem;">Flask</span>
+          <span style="background:var(--card2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:.75rem;">Python</span>
+          <span style="background:var(--card2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;font-size:.75rem;">PyTorch</span>
+        </div>
+      </div>
+
+      <!-- Flipkart use case -->
+      <div style="margin-top:20px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);
+                  border-radius:12px;padding:16px;">
+        <div style="font-size:.8rem;font-weight:700;color:#fb923c;margin-bottom:8px;">
+          🏙️ Bengaluru Traffic Application
+        </div>
+        <div style="font-size:.8rem;color:var(--muted);line-height:1.6;">
+          Designed for Bengaluru's 8M+ vehicle ecosystem. Integrates with existing CCTV infrastructure to enable 24/7 automated violation detection, reducing manual monitoring by <strong style="color:var(--text)">~80%</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section" id="how">
+  <h2>⚙️ How It Works</h2>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-icon">📷</div>
+      <h3>Image Input</h3>
+      <p>CCTV frame or traffic camera image uploaded or streamed in real-time</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-icon">🤖</div>
+      <h3>YOLOv8 Detection</h3>
+      <p>Detects all vehicles, persons, traffic lights with bounding boxes</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-icon">⚖️</div>
+      <h3>Violation Rules</h3>
+      <p>Rule-based classifier checks helmet, seatbelt, triple riding, lane violations</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-icon">🔤</div>
+      <h3>OCR Plates</h3>
+      <p>EasyOCR extracts license plate numbers from detected vehicle regions</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <div class="step-icon">📋</div>
+      <h3>Evidence Report</h3>
+      <p>Annotated image + violation metadata stored for enforcement action</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  TrafficShield AI · Built for Gridlock Hackathon 2.0 by Flipkart · Team Sureshkumar
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg">Done</span>
+</div>
+
+<script>
+const VIOL_ICONS = {
+  helmet:'🪖', triple:'🏍️', seatbelt:'🔒',
+  wrongside:'↔️', redlight:'🚦', overloading:'📦', illegal_park:'🅿️'
+};
+const SEV_CLASS = {Critical:'critical',High:'high',Medium:'medium',Low:'low'};
+
+let selectedFile = null;
+
+// Drag & drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+dz.addEventListener('drop', e=>{
+  e.preventDefault(); dz.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if(f && f.type.startsWith('image/')) setFile(f);
+});
+document.getElementById('fileInput').addEventListener('change', e=>{
+  if(e.target.files[0]) setFile(e.target.files[0]);
+});
+
+function setFile(f){
+  selectedFile = f;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('preview-wrap').style.display = 'block';
+    document.getElementById('fileName').textContent = f.name;
+    document.getElementById('fileSize').textContent = (f.size/1024).toFixed(1)+' KB';
+    document.getElementById('detectBtn').disabled = false;
+    document.getElementById('clearBtn').style.display = 'flex';
+    document.getElementById('results-section').style.display = 'none';
+  };
+  reader.readAsDataURL(f);
+}
+
+function clearAll(){
+  selectedFile = null;
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('detectBtn').disabled = true;
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+async function runDetection(){
+  if(!selectedFile) return;
+  document.getElementById('detectBtn').disabled = true;
+  document.getElementById('loadingBox').style.display = 'block';
+  document.getElementById('results-section').style.display = 'none';
+
+  // Animate steps
+  const steps = ['s1','s2','s3','s4','s5'];
+  for(let i=0;i<steps.length;i++){
+    await delay(600);
+    if(i>0) document.getElementById(steps[i-1]).className='step done';
+    document.getElementById(steps[i]).className='step active';
+  }
+
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+
+  try {
+    const res  = await fetch('/detect', {method:'POST', body:fd});
+    const data = await res.json();
+    steps.forEach(s=>document.getElementById(s).className='step done');
+    await delay(400);
+    document.getElementById('loadingBox').style.display = 'none';
+    showResults(data);
+  } catch(e){
+    document.getElementById('loadingBox').style.display = 'none';
+    showToast('❌','Detection failed. Please try again.','#ef4444');
+    document.getElementById('detectBtn').disabled = false;
+  }
+}
+
+function showResults(d){
+  document.getElementById('results-section').style.display = 'block';
+
+  // Risk
+  const risk = d.risk_score || 0;
+  document.getElementById('riskFill').style.width = risk+'%';
+  document.getElementById('riskNum').textContent = risk+' / 100';
+
+  // Summary
+  document.getElementById('sumVehicles').textContent = d.total_vehicles || 0;
+  document.getElementById('sumPersons').textContent  = d.total_persons  || 0;
+  document.getElementById('sumViols').textContent    = d.total_violations|| 0;
+
+  // Result image
+  if(d.result_image){
+    document.getElementById('resultImg').src = '/static/results/'+d.result_image;
+    document.getElementById('resultImgWrap').style.display = 'block';
+  }
+
+  // Badge
+  const badge = document.getElementById('resultBadge');
+  if(risk === 0){ badge.textContent='✅ SAFE'; badge.className='result-badge badge-safe';}
+  else if(risk < 40){badge.textContent='⚠️ WARNING'; badge.className='result-badge badge-warn';}
+  else{badge.textContent='🚨 HIGH RISK'; badge.className='result-badge badge-risk';}
+
+  // Violations
+  const vl = document.getElementById('violList');
+  vl.innerHTML = '';
+  if(!d.violations || d.violations.length===0){
+    vl.innerHTML='<div class="no-viol"><span class="nv-icon">✅</span>No violations detected</div>';
+  } else {
+    d.violations.forEach(v=>{
+      const sevC = SEV_CLASS[v.severity]||'low';
+      vl.innerHTML += `
+      <div class="viol-card ${sevC}">
+        <div class="viol-icon">${VIOL_ICONS[v.type]||'⚠️'}</div>
+        <div class="viol-info">
+          <div class="viol-name">
+            ${v.label}
+            <span class="sev-badge sev-${sevC}">${v.severity.toUpperCase()}</span>
+          </div>
+          <div class="viol-detail">${v.detail||''}</div>
+          <div class="viol-conf">
+            <span class="conf-lbl">Confidence: ${v.confidence}%</span>
+            <div class="conf-bar"><div class="conf-fill" style="width:${v.confidence}%"></div></div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Plates
+  if(d.plates && d.plates.length>0){
+    document.getElementById('platesSection').style.display='block';
+    const pl = document.getElementById('platesList');
+    pl.innerHTML = d.plates.map(p=>
+      `<div class="plate">🚗 ${p.text} <span class="plate-conf">${p.confidence}%</span></div>`
+    ).join('');
+  }
+
+  document.getElementById('resultTimestamp').textContent =
+    '📅 Analyzed at: '+d.timestamp+' · ID: '+d.id;
+
+  showToast('✅', d.total_violations+' violation(s) detected', '#10b981');
+  document.getElementById('detectBtn').disabled = false;
+}
+
+function showToast(icon, msg, color){
+  const t=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  t.style.borderColor=color;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+</script>
+</body>
+</html>
