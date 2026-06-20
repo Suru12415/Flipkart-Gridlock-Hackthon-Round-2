@@ -3,6 +3,10 @@ Traffic Violation Detection Engine
 YOLOv8 (auto-downloads on first run) + demo fallback
 """
 
+# ── Fix matplotlib/fontconfig crash on Render ────────────────────────────────
+import matplotlib
+matplotlib.use('Agg')
+# ─────────────────────────────────────────────────────────────────────────────
 
 import cv2, numpy as np, os, uuid
 from datetime import datetime
@@ -23,19 +27,26 @@ TRAFFIC_LIGHT_ID = 9
 class TrafficViolationDetector:
     def __init__(self):
         self.model = None
-        self._load_model()
+        # DO NOT load model in __init__ — lazy load on first detect() call
+        # This avoids crashing Gunicorn worker at import time
 
     def _load_model(self):
+        """Lazy-load YOLO only when needed, with Agg backend already set."""
+        if self.model is not None:
+            return  # already loaded
         try:
             from ultralytics import YOLO
             print("[DETECTOR] Loading YOLOv8n...")
             self.model = YOLO("yolov8n.pt")
             print("[DETECTOR] Model ready ✓")
         except Exception as e:
-            print(f"[DETECTOR] Running in demo mode (YOLO unavailable: {type(e).__name__})")
+            print(f"[DETECTOR] Running in demo mode (YOLO unavailable: {type(e).__name__}: {e})")
             self.model = None
 
     def detect(self, image_path, save_dir):
+        # Lazy-load model here, not in __init__
+        self._load_model()
+
         img = cv2.imread(image_path)
         if img is None:
             return {"error": "Could not read image"}
