@@ -14,6 +14,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 app.config['UPLOAD_FOLDER']  = 'static/uploads'
 app.config['RESULTS_FOLDER'] = 'static/results'
 
+# Create required directories at startup (works with gunicorn too)
+os.makedirs('static/uploads', exist_ok=True)
+os.makedirs('static/results', exist_ok=True)
+
 ALLOWED = {'png','jpg','jpeg','webp'}
 
 # In-memory analytics store
@@ -99,8 +103,5 @@ def _demo_result(fname):
     }
 
 if __name__ == '__main__':
-    os.makedirs('static/uploads', exist_ok=True)
-    os.makedirs('static/results', exist_ok=True)
-
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
