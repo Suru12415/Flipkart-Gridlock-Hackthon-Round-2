@@ -103,7 +103,7 @@ class TrafficViolationDetector:
             right_v = [v for v in vehicles if v["cx"] >= mid_x]
             if len(left_v) >= 2:
                 for v in right_v:
-                    if v["cy"] > h * 0.4:
+                    if v["cy"] > h * 0.4:   
                         violations.append({"type":"wrongside","box":v["box"],"confidence":0.61,
                                            "detail":"Vehicle on wrong side of road"})
 
